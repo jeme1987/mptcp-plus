@@ -115,3 +115,12 @@ familiar with it.
 If you have successfully installed mercurial, you can get
 a copy of the development version with the following command:
 "hg clone http://code.nsnam.org/ns-3-dev"
+
+Publication:
+
+We implemented MPTCP in ns-3 and our work has been published in International Conference on Heterogeneous Networking for Quality, Reliability, Security and Robustness
+Qshine 2018. The link to our paper is given below.
+
+https://link.springer.com/chapter/10.1007/978-3-030-14413-5_4 
+
+
