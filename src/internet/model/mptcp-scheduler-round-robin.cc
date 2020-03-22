@@ -82,6 +82,7 @@ MpTcpSchedulerRoundRobin::GenerateMapping(int& activeSubflowArrayId, SequenceNum
   NS_LOG_FUNCTION(this);
   NS_ASSERT(m_metaSock);
 
+  printf("[+] Using round robin\n");
   int nbOfSubflows = m_metaSock->GetNActiveSubflows();
   int attempt = 0;
   uint32_t amountOfDataToSend = 0;
@@ -105,6 +106,7 @@ MpTcpSchedulerRoundRobin::GenerateMapping(int& activeSubflowArrayId, SequenceNum
   while(attempt < nbOfSubflows)
      {
        attempt++;
+
        m_lastUsedFlowId = (m_lastUsedFlowId + 1) % nbOfSubflows;
        Ptr<MpTcpSubflow> subflow = m_metaSock->GetSubflow(m_lastUsedFlowId);
        uint32_t subflowWindow = subflow->AvailableWindow();

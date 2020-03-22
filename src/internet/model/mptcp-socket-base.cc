@@ -39,6 +39,7 @@
 #include "ns3/drop-tail-queue.h"
 #include "ns3/object-vector.h"
 #include "ns3/mptcp-scheduler-round-robin.h"
+#include "ns3/mptcp-scheduler-fastest-rtt.h"
 #include "ns3/mptcp-socket-base.h"
 #include "ns3/mptcp-subflow.h"
 #include "ns3/tcp-option-mptcp.h"
@@ -161,7 +162,7 @@ MpTcpSocketBase::MpTcpSocketBase()
     m_multipleSubflows(false),
     fLowStartTime(0),
     m_subflowTypeId(MpTcpSubflow::GetTypeId ()),
-    m_schedulerTypeId(MpTcpSchedulerRoundRobin::GetTypeId())
+    m_schedulerTypeId(MpTcpScheduler::GetTypeId())
 {
   NS_LOG_FUNCTION(this);
 
@@ -191,7 +192,22 @@ MpTcpSocketBase::CreateScheduler(TypeId schedulerTypeId)
   NS_LOG_FUNCTION(this);
   NS_LOG_WARN("Overriding scheduler choice");
   ObjectFactory schedulerFactory;
-  schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
+  //TODO BUGFIX
+  /*
+  if (m_schedulerTypeId == MpTcpSchedulerFastestRTT::GetTypeId()) {
+    schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
+    printf("Creating scheduler - fastest RTT\n");
+  }
+  else if (m_schedulerTypeId == MpTcpSchedulerRoundRobin::GetTypeId()) {
+    printf("Creating scheduler - round robin\n");
+    schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
+  }*/
+  
+  //TODO temp fix select scheduler here
+  schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
+  //schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
+  
+  
   schedulerFactory.SetTypeId(schedulerTypeId);
   m_scheduler = schedulerFactory.Create<MpTcpScheduler>();
   m_scheduler->SetMeta(this);
@@ -910,8 +926,10 @@ MpTcpSocketBase::SendPendingData(bool withAck)
   int subflowArrayId;
   uint16_t length;
 
+  printf("[+] Subflow.1 %d\n",subflowArrayId);
   while(m_scheduler->GenerateMapping(subflowArrayId, dsnHead, length))
   {
+  printf("[+] Subflow.2 %d\n",subflowArrayId);
     Ptr<MpTcpSubflow> subflow = GetSubflow(subflowArrayId);
 
     // For now we limit the mapping to a per packet basis
@@ -1058,7 +1076,7 @@ MpTcpSocketBase::AdvertiseAddresses()
        Address address = InetSocketAddress(interfaceAddr.GetLocal(), m_endPoint->GetLocalPort ());
        Ptr<TcpOptionMpTcpAddAddress> addaddr =  CreateObject<TcpOptionMpTcpAddAddress>();
        uint8_t addrId = j;
-       std::cout<<" advertising "<<interfaceAddr.GetLocal()<<" "<<m_endPoint->GetLocalPort ()<<std::endl;
+       //std::cout<<" advertising "<<interfaceAddr.GetLocal()<<" "<<m_endPoint->GetLocalPort ()<<std::endl;
        addaddr->SetAddress (address, addrId);
        NS_LOG_INFO("Appended option" << addaddr);
        header.AppendOption( addaddr );

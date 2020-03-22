@@ -102,7 +102,8 @@ MpTcpSchedulerFastestRTT::GenerateMapping(int& activeSubflowArrayId, SequenceNum
 {
   NS_LOG_FUNCTION(this);
   NS_ASSERT(m_metaSock);
-
+  
+  printf("[+] using fastest RTT\n");
   uint32_t amountOfDataToSend = 0;
   //! Tx data not sent to subflows yet
   SequenceNumber32 metaNextTxSeq = m_metaSock->Getvalue_nextTxSeq();
@@ -117,8 +118,8 @@ MpTcpSchedulerFastestRTT::GenerateMapping(int& activeSubflowArrayId, SequenceNum
    {
      return false;
     }
-
   int id = FindFastestSubflowWithFreeWindow();
+  printf("[+] id = %d\n",id);
   if(id < 0)
     {
       NS_LOG_DEBUG("No valid subflow");
@@ -132,6 +133,7 @@ MpTcpSchedulerFastestRTT::GenerateMapping(int& activeSubflowArrayId, SequenceNum
   //metaWindow en fait on s'en fout du SegSize ?
   if (canSend > 0)
     {
+      activeSubflowArrayId = id;
       dsn = SEQ32TO64(metaNextTxSeq);
       canSend = std::min(canSend, amountOfDataToSend);
       // For now we limit ourselves to a per packet basis

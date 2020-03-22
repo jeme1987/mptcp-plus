@@ -37,8 +37,10 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
  
   //Enable MPTCP 
-  //Config::SetDefault ("ns3::TcpSocketBase::EnableMpTcp", BooleanValue (true));
+  Config::SetDefault ("ns3::TcpSocketBase::EnableMpTcp", BooleanValue (true));
   Config::SetDefault("ns3::MpTcpSocketBase::PathManagerMode", EnumValue (MpTcpSocketBase::FullMesh));
+  //Config::SetDefault("ns3::MpTcpSocketBase::Scheduler", TypeIdValue(MpTcpSchedulerFastestRTT::GetTypeId()));
+  Config::SetDefault("ns3::MpTcpSocketBase::Scheduler", TypeIdValue(MpTcpSchedulerRoundRobin::GetTypeId()));
   //Config::SetDefault ("ns::MpTcpNdiffPorts::MaxSubflows", UintegerValue (4));
   
  
