@@ -926,10 +926,9 @@ MpTcpSocketBase::SendPendingData(bool withAck)
   int subflowArrayId;
   uint16_t length;
 
-  printf("[+] Subflow.1 %d\n",subflowArrayId);
   while(m_scheduler->GenerateMapping(subflowArrayId, dsnHead, length))
   {
-  printf("[+] Subflow.2 %d\n",subflowArrayId);
+    printf("[+] Chosen Subflow =  %d\n",subflowArrayId);
     Ptr<MpTcpSubflow> subflow = GetSubflow(subflowArrayId);
 
     // For now we limit the mapping to a per packet basis

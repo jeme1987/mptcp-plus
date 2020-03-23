@@ -119,7 +119,6 @@ MpTcpSchedulerFastestRTT::GenerateMapping(int& activeSubflowArrayId, SequenceNum
      return false;
     }
   int id = FindFastestSubflowWithFreeWindow();
-  printf("[+] id = %d\n",id);
   if(id < 0)
     {
       NS_LOG_DEBUG("No valid subflow");
