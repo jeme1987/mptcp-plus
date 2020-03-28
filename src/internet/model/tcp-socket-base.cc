@@ -4147,7 +4147,10 @@ void
 TcpSocketBase::AddOptions (TcpHeader& header)
 {
   NS_LOG_FUNCTION (this << header);
-  AddMpTcpOptions(header);
+
+  if (m_mptcpEnabled) {
+    AddMpTcpOptions(header);
+  }
 
   if (m_timestampEnabled)
     {
