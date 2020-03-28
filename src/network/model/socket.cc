@@ -138,6 +138,13 @@ Socket::Send (Ptr<Packet> p)
   return Send (p, 0);
 }
 
+void 
+Socket::SetRecvCallbackTCP (Callback<void, Ptr<Socket> > receivedDataTCP)
+{
+  NS_LOG_FUNCTION (this << &receivedDataTCP);
+  m_receivedDataTCP = receivedDataTCP;
+}
+
 int 
 Socket::Send (const uint8_t* buf, uint32_t size, uint32_t flags)
 {
@@ -309,6 +316,10 @@ Socket::NotifyDataRecv (void)
     {
       m_receivedData (this);
     }
+
+  if (!m_receivedDataTCP.IsNull ()) {
+    m_receivedDataTCP(this);
+  }
 }
 
 void 
@@ -324,6 +335,7 @@ Socket::DoDispose (void)
   m_dataSent = MakeNullCallback<void,Ptr<Socket>, uint32_t> ();
   m_sendCb = MakeNullCallback<void,Ptr<Socket>, uint32_t> ();
   m_receivedData = MakeNullCallback<void,Ptr<Socket> > ();
+  m_receivedDataTCP = MakeNullCallback<void,Ptr<Socket> > ();
 }
 
 void
