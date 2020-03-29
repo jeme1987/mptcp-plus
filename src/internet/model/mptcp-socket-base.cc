@@ -52,6 +52,8 @@ using namespace std;
 
 namespace ns3
 {
+static  int redundant = 0;
+
 NS_LOG_COMPONENT_DEFINE("MpTcpSocketBase");
 
 NS_OBJECT_ENSURE_REGISTERED(MpTcpSocketBase); 
@@ -204,8 +206,8 @@ MpTcpSocketBase::CreateScheduler(TypeId schedulerTypeId)
   }*/
   
   //TODO temp fix select scheduler here
-  schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
-  //schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
+  //schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
+  schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
   
   
   schedulerFactory.SetTypeId(schedulerTypeId);
@@ -357,6 +359,7 @@ MpTcpSocketBase::DumpRxBuffers(Ptr<MpTcpSubflow> sf) const
 void
 MpTcpSocketBase::OnSubflowRecv(Ptr<MpTcpSubflow> sf)
 {
+  printf("[+] OnSubflowRecv\n");
   NS_LOG_FUNCTION(this << "Received data from subflow=" << sf);
   NS_LOG_INFO("=> Dumping meta RxBuffer before extraction");
   DumpRxBuffers(sf);
@@ -367,13 +370,16 @@ MpTcpSocketBase::OnSubflowRecv(Ptr<MpTcpSubflow> sf)
   {
     Ptr<Packet> p;
     SequenceNumber64 dsn;
+    
+    //get amount of data we can read into buffer
     uint32_t canRead = m_rxBuffer->MaxBufferSize() - m_rxBuffer->Size();
-
+    
     if(canRead <= 0)
     {
-      NS_LOG_LOGIC("No free space in meta Rx Buffer");
+      NS_LOG_LOGIC("No free space en meta Rx Buffer");
       break;
     }
+
     /* Todo tell if we stop to extract only between mapping boundaries or if Extract */
     p = sf->ExtractAtMostOneMapping(canRead, true, dsn);
     if (p->GetSize() == 0)
@@ -382,11 +388,13 @@ MpTcpSocketBase::OnSubflowRecv(Ptr<MpTcpSubflow> sf)
       break;
     }
     // THIS MUST WORK. else we removed the data from subflow buffer so it would be lost
-    // Pb here, htis will be extracted but will not be saved into the main buffer
+    // Pb here, this will be extracted but will not be saved into the main buffer
     // Notify app to receive if necessary
     if(!m_rxBuffer->Add(p, SEQ64TO32(dsn)))
     {
-      NS_FATAL_ERROR("Data might have been lost");
+      //for redundant to ignore duplicate subflow packets (TBC if this works)
+      if(!redundant)
+        NS_FATAL_ERROR("Data might have been lost");
     }
   }
   NS_LOG_INFO("=> Dumping RxBuffers after extraction");
@@ -926,13 +934,18 @@ MpTcpSocketBase::SendPendingData(bool withAck)
   int subflowArrayId;
   uint16_t length;
 
+  /* redundant scheduler flag */
+  // TODO move to config options
+
   while(m_scheduler->GenerateMapping(subflowArrayId, dsnHead, length))
   {
     printf("[+] Chosen Subflow =  %d\n",subflowArrayId);
     Ptr<MpTcpSubflow> subflow = GetSubflow(subflowArrayId);
-
+    
+    /* Sending of packet on subflow */
     // For now we limit the mapping to a per packet basis
     bool ok = subflow->AddLooseMapping(dsnHead, length);
+
     NS_ASSERT(ok);
     // see next #if 0 to see how it should be
     SequenceNumber32 dsnTail = SEQ64TO32(dsnHead) + length;
@@ -941,6 +954,22 @@ MpTcpSocketBase::SendPendingData(bool withAck)
     int ret = subflow->Send(p, 0);
     // Flush to update cwnd and stuff
     NS_LOG_DEBUG("Send result=" << ret);
+
+    int numSubFlows = GetNActiveSubflows();
+      printf("[+] Total subflows = %d\n", numSubFlows);
+    if (redundant) {
+      
+      for (int j = 0; j<numSubFlows; j++) {
+        printf("[+] Redundant subflow 1\n");
+        subflow = GetSubflow(((subflowArrayId +j) % numSubFlows));
+        ok = subflow->AddLooseMapping(dsnHead, length);
+        NS_ASSERT(ok);
+        ret = subflow->Send(p, 0);
+        NS_LOG_DEBUG("Send result=" << ret);
+      }
+      
+    }
+
 
     /* Ideally we should be able to send data out of order so that it arrives in order at the
      * receiver but to do that we need SACK support (IMO). Once SACK is implemented it should
