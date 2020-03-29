@@ -847,7 +847,6 @@ MpTcpSubflow::AppendDSSFin()
 void
 MpTcpSubflow::ReceivedData(Ptr<Packet> p, const TcpHeader& tcpHeader)
 {
-  printf("[+] Subflow received data\n");
   NS_LOG_FUNCTION (this << tcpHeader);
   MpTcpMapping mapping;
   bool sendAck = false;

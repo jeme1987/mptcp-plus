@@ -52,7 +52,7 @@ using namespace std;
 
 namespace ns3
 {
-static  int redundant = 0;
+static  int redundant = 1;
 
 NS_LOG_COMPONENT_DEFINE("MpTcpSocketBase");
 
@@ -359,7 +359,6 @@ MpTcpSocketBase::DumpRxBuffers(Ptr<MpTcpSubflow> sf) const
 void
 MpTcpSocketBase::OnSubflowRecv(Ptr<MpTcpSubflow> sf)
 {
-  printf("[+] OnSubflowRecv\n");
   NS_LOG_FUNCTION(this << "Received data from subflow=" << sf);
   NS_LOG_INFO("=> Dumping meta RxBuffer before extraction");
   DumpRxBuffers(sf);
@@ -957,11 +956,12 @@ MpTcpSocketBase::SendPendingData(bool withAck)
 
     int numSubFlows = GetNActiveSubflows();
       printf("[+] Total subflows = %d\n", numSubFlows);
+    
+    /* redundant protocol sends on all other flows */
     if (redundant) {
-      
-      for (int j = 0; j<numSubFlows; j++) {
-        printf("[+] Redundant subflow 1\n");
+      for (int j = 1; j<numSubFlows; j++) {
         subflow = GetSubflow(((subflowArrayId +j) % numSubFlows));
+        printf("[+] Sending on redundant subflow %d\n", ((subflowArrayId +j) % numSubFlows));
         ok = subflow->AddLooseMapping(dsnHead, length);
         NS_ASSERT(ok);
         ret = subflow->Send(p, 0);
