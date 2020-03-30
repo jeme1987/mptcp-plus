@@ -370,6 +370,9 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
   m_rxBuffer = CopyObject (sock.m_rxBuffer);
   m_tcb = CopyObject (sock.m_tcb);
 
+  NS_LOG_LOGIC ("Reserve receiveDataTCP cb:" << &(sock.m_receivedDataTCP));
+  m_receivedDataTCP = sock.m_receivedDataTCP;
+
   m_tcb->m_currentPacingRate = m_tcb->m_maxPacingRate;
   m_pacingTimer.SetFunction (&TcpSocketBase::NotifyPacingPerformed, this);
 
@@ -4144,7 +4147,10 @@ void
 TcpSocketBase::AddOptions (TcpHeader& header)
 {
   NS_LOG_FUNCTION (this << header);
-  AddMpTcpOptions(header);
+
+  if (m_mptcpEnabled) {
+    AddMpTcpOptions(header);
+  }
 
   if (m_timestampEnabled)
     {
