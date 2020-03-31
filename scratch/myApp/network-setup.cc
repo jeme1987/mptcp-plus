@@ -35,7 +35,8 @@ std::pair<Ipv4Address, Ipv4Address> createCsmaNetwork(
     const Parameters &params,
     const Ptr<Node> n1, const Ptr<Node> n2,
     std::string network, std::string mask,
-    uint64_t delay, uint64_t error_rate)
+    uint64_t delay, uint64_t error_rate,
+    bool enablePcap = false, bool enableTrace = false)
 {
     NodeContainer nodes(n1, n2);
     Ptr<CsmaChannel> channel = CreateObjectWithAttributes<CsmaChannel> (
@@ -46,6 +47,12 @@ std::pair<Ipv4Address, Ipv4Address> createCsmaNetwork(
     csma.SetDeviceAttribute ("EncapsulationMode", StringValue ("Llc"));
     NetDeviceContainer devs = csma.Install (nodes, channel);
     
+    // Enable trace/pcap
+    AsciiTraceHelper *ascii = new AsciiTraceHelper();
+    string filename = "csma-" + network;
+    csma.EnableAsciiAll (ascii->CreateFileStream (filename + ".tr"));
+    csma.EnablePcapAll (filename);
+
     // Apply a error model to an uniform distribution 
     Ptr<RateErrorModel> em1 =
         CreateObjectWithAttributes<RateErrorModel> (
@@ -64,7 +71,8 @@ std::pair<Ipv4Address, Ipv4Address> createCsmaNetwork(
 std::pair<Ipv4Address, Ipv4Address> createWifiNetwork(
     const Parameters &params,
     const Ptr<Node> sta, const Ptr<Node> ap,
-    std::string network, std::string mask)
+    std::string network, std::string mask,
+    bool enablePcap = false, bool enableTrace = false)
 {
     double distance = 1.0; //meter
     double frequency = 5.0; // GHz
@@ -112,6 +120,12 @@ std::pair<Ipv4Address, Ipv4Address> createWifiNetwork(
     mac.SetType ("ns3::ApWifiMac",
                        "Ssid", SsidValue (ssid));
     NetDeviceContainer apDevice  = wifi.Install (phy, mac, ap);
+
+    // Enable trace/pcap
+    AsciiTraceHelper *ascii = new AsciiTraceHelper();
+    string filename = "wifi-" + network;
+    phy.EnableAsciiAll (ascii->CreateFileStream (filename + ".tr"));
+    phy.EnablePcapAll (filename);
 
     // mobility.
     MobilityHelper mobility;
@@ -166,21 +180,25 @@ int main(int argc, char** argv) {
         params,
         allNodes.Get(NETWORK_NODE::WIFI_AP), allNodes.Get(NETWORK_NODE::SERVER_NODE),
         "10.2.1.0", "255.255.255.0",
-        params.delayWifiServer, params.errateWifiServer);
+        params.delayWifiServer, params.errateWifiServer,
+        true /* Enable Pcap*/,
+        true /* Enable Trace*/);
 
     NS_LOG_INFO ("Create CSMA network between LTE and server.");
     std::pair<Ipv4Address, Ipv4Address> ipsLteServer = createCsmaNetwork(
         params,
         allNodes.Get(NETWORK_NODE::LTE_BASESTATION), allNodes.Get(NETWORK_NODE::SERVER_NODE),
         "10.3.1.0", "255.255.255.0",
-        params.delayLteServer, params.errateLteServer);
+        params.delayLteServer, params.errateLteServer;
     NS_UNUSED(ipsLteServer);
 
     NS_LOG_INFO ("Create Wi-Fi network between mobile and Wi-Fi AP.");
     std::pair<Ipv4Address, Ipv4Address> ipsMobileWifi = createWifiNetwork(
         params,
         allNodes.Get(NETWORK_NODE::MOBILE), allNodes.Get(NETWORK_NODE::WIFI_AP),
-        "10.1.2.0", "255.255.255.0");
+        "10.1.2.0", "255.255.255.0",
+        true /* Enable Pcap*/,
+        true /* Enable Trace*/);
     NS_UNUSED(ipsMobileWifi);
 
     NS_LOG_INFO ("Create point-2-point network between mobile and LTE.");

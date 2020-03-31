@@ -37,3 +37,8 @@ build-dir/
 build/
 /.cproject
 /.project
+
+myApp.flowmon.xml
+myApp.xml
+myApp.appStats.json
+
