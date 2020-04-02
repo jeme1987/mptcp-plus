@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
         params,
         allNodes.Get(NETWORK_NODE::LTE_BASESTATION), allNodes.Get(NETWORK_NODE::SERVER_NODE),
         "10.3.1.0", "255.255.255.0",
-        params.delayLteServer, params.errateLteServer;
+        params.delayLteServer, params.errateLteServer);
     NS_UNUSED(ipsLteServer);
 
     NS_LOG_INFO ("Create Wi-Fi network between mobile and Wi-Fi AP.");
