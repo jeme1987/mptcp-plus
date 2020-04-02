@@ -52,7 +52,7 @@ using namespace std;
 
 namespace ns3
 {
-static  int redundant = 1;
+static  int redundant = 0;
 
 NS_LOG_COMPONENT_DEFINE("MpTcpSocketBase");
 
@@ -361,7 +361,7 @@ MpTcpSocketBase::OnSubflowRecv(Ptr<MpTcpSubflow> sf)
 {
   NS_LOG_FUNCTION(this << "Received data from subflow=" << sf);
   NS_LOG_INFO("=> Dumping meta RxBuffer before extraction");
-  DumpRxBuffers(sf);
+  //DumpRxBuffers(sf);
   SequenceNumber32 expectedDSN = m_rxBuffer->NextRxSequence();
 
   /* Extract one by one mappings from subflow */
@@ -434,7 +434,7 @@ onSubflowNewState(
   TcpSocket::TcpStates_t newState
   )
 {
-  NS_LOG_UNCOND("onSubflowNewState wrapper");
+  //NS_LOG_UNCOND("onSubflowNewState wrapper");
     meta->OnSubflowNewState(
       "context", sf, oldState, newState);
 }

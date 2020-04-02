@@ -150,7 +150,7 @@ MpTcpSubflow::MpTcpSubflow(const TcpSocketBase& sock)
   // We need to update the endpoint callbnacks so that packets come to this socket
   // instead of the abstract meta
   // this is necessary for the client socket
-  NS_LOG_UNCOND("Cb=" << m_sendCb.IsNull () << " endPoint=" << m_endPoint);
+  //NS_LOG_UNCOND("Cb=" << m_sendCb.IsNull () << " endPoint=" << m_endPoint);
   m_endPoint = (sock.m_endPoint);
   m_endPoint6 = (sock.m_endPoint6);
   SetupCallback();

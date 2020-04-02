@@ -816,7 +816,7 @@ bool
 TcpL4Protocol::AddSocket (Ptr<TcpSocketBase> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  DumpSockets();
+  //DumpSockets();
   std::vector<Ptr<TcpSocketBase> >::iterator it = m_sockets.begin ();
 
   while (it != m_sockets.end ())
