@@ -15,6 +15,8 @@ Parameters parseArgsToParams(int argc, char** argv) {
         params.endTime);
     cmd.AddValue ("UseTCP", "1 for TCP, 0 for UDP",
         params.UseTCP);
+    cmd.AddValue ("UseMPTCP", "1 for MPTCP, 0 for others",
+        params.UseMPTCP);
     cmd.AddValue ("packetSize", "Size of Packet sent by traffic generator",
         params.packetSize);
     cmd.AddValue ("burstPktNum", "Number of packet sent by traffic generator at one burst",
@@ -34,6 +36,11 @@ Parameters parseArgsToParams(int argc, char** argv) {
     if (params.packetSize > 1464) {
         std::cerr << "Packet size including TCP/IP header (36) should not exceed MTU of CSMA(1500)" << std::endl;
         exit(-1);
+    }
+
+    if (params.UseMPTCP && !params.UseTCP) {
+        std::cerr << "Override UseTCP becasue of UseMPTCP is enabled." << std::endl;
+        params.UseTCP = 1;
     }
     std::cout << parmsToJSONObj() << std::endl;
 

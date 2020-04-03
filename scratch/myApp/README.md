@@ -37,19 +37,25 @@ module. Refer to ns-3.30.1/examples/stats/wifi-example-apps.cc
 ## Build & Run myApp
 https://www.nsnam.org/docs/manual/html/logging.html#logging
 ```shell
+
 # Run UDP traffic
-NS_LOG="myApp" ./waf --run "myApp"
+NS_LOG="myApp:myApp-mon" ./waf --run "myApp"
 
 # Run TCP traffic
-NS_LOG="myApp" ./waf --run "myApp -- UseTCP=1"
+NS_LOG="myApp:myApp-mon" ./waf --run "myApp --UseTCP=1"
 
-NS_LOG="myApp:myApp-tg:myApp-mon<ComponentName>" ./waf --run "myApp --<arguments>=<value>"
+# Run MPTCP traffic
+NS_LOG="myApp:myApp-mon" ./waf --run "myApp --UseTCP=1 --UseMPTCP=1"
+
+# Run with GDB
+NS_LOG="myApp:myApp-mon:TcpSocketBase:MpTcpSocketBase" ./waf --run myApp --command-template="gdb --args %s --UseTCP=1"
 ```
 
 | Arguments        | Default   | 
 | -----------------|:---------:| 
 | endTime          | 6         |
-| UseTCP           | 0         | 
+| UseTCP           | 0         |
+| UseMPTCP         | 0         |
 | packetSize       | 1464      | (MTU of CSMA) 
 | burstPktNum      | 1         | 
 | burstItvSec      | 0.5 sec   |
@@ -60,7 +66,7 @@ NS_LOG="myApp:myApp-tg:myApp-mon<ComponentName>" ./waf --run "myApp --<arguments
 
 
 * Enabling these components log is helpful for debugging:
- - TcpSocketBase, Socket
+ - MpTcpSocketBase, MpTcpSubflow, MpTcpMapping, TcpSocketBase
 
 
 ## Result Analysis

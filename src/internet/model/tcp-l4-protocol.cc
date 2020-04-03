@@ -93,6 +93,10 @@ TcpL4Protocol::GetTypeId (void)
                    ObjectVectorValue (),
                    MakeObjectVectorAccessor (&TcpL4Protocol::m_sockets),
                    MakeObjectVectorChecker<TcpSocketBase> ())
+    .AddAttribute ("UseMpTcpSocketBase", "Use MpTcpSocketBase.",
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&TcpL4Protocol::m_useMpTcpSocketBase),
+                   MakeUintegerChecker <uint8_t>())
   ;
   return tid;
 }
@@ -201,7 +205,13 @@ TcpL4Protocol::CreateSocket (TypeId congestionTypeId, TypeId recoveryTypeId)
   recoveryAlgorithmFactory.SetTypeId (recoveryTypeId);
 
   Ptr<RttEstimator> rtt = rttFactory.Create<RttEstimator> ();
-  Ptr<TcpSocketBase> socket = CreateObject<TcpSocketBase> ();
+
+  Ptr<TcpSocketBase> socket;
+  if (m_useMpTcpSocketBase)
+    socket = CreateObject<MpTcpSocketBase> ();
+  else
+    socket = CreateObject<TcpSocketBase> ();
+  
   Ptr<TcpCongestionOps> algo = congestionAlgorithmFactory.Create<TcpCongestionOps> ();
   Ptr<TcpRecoveryOps> recovery = recoveryAlgorithmFactory.Create<TcpRecoveryOps> ();
 

@@ -9,6 +9,7 @@ public:
 
     //Traffic
     uint16_t UseTCP;
+    uint16_t UseMPTCP;
     uint64_t packetSize;
     uint64_t burstPktNum;
     double burstItvSec;
@@ -21,6 +22,7 @@ public:
 
     Parameters() {
         UseTCP = 0;
+        UseMPTCP = 0;
         delayLteServer = 2;
         delayWifiServer = 2;
         errateLteServer = 1;

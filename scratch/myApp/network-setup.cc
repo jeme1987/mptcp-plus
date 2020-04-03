@@ -148,6 +148,14 @@ int main(int argc, char** argv) {
 
     Parameters params = parseArgsToParams(argc, argv);
 
+    if (params.UseMPTCP) {
+        Config::SetDefault ("ns3::TcpL4Protocol::UseMpTcpSocketBase", UintegerValue(params.UseMPTCP));
+        Config::SetDefault ("ns3::TcpSocketBase::EnableMpTcp", BooleanValue (true));
+        // TODO: Below settings does not work.
+        // Config::SetDefault ("ns3::MpTcpSocketBase::PathManagerMode", EnumValue (MpTcpSocketBase::FullMesh));
+        // Config::SetDefault ("ns3::MpTcpSocketBase::Scheduler", TypeIdValue(MpTcpSchedulerRoundRobin::GetTypeId()));
+    }
+
     // Here, we will create TOTAL_NODES for network topology
     NS_LOG_INFO ("Create nodes.");
     NodeContainer allNodes;
@@ -189,7 +197,7 @@ int main(int argc, char** argv) {
         params,
         allNodes.Get(NETWORK_NODE::LTE_BASESTATION), allNodes.Get(NETWORK_NODE::SERVER_NODE),
         "10.3.1.0", "255.255.255.0",
-        params.delayLteServer, params.errateLteServer;
+        params.delayLteServer, params.errateLteServer);
     NS_UNUSED(ipsLteServer);
 
     NS_LOG_INFO ("Create Wi-Fi network between mobile and Wi-Fi AP.");
@@ -217,7 +225,6 @@ int main(int argc, char** argv) {
     //Turn on global static routing
     NS_LOG_INFO ("Enable global static routing.");
     Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
 
     NS_LOG_INFO ("Create traffic source & sink.");
     Ptr<Node> appSource = allNodes.Get(MOBILE);
@@ -273,7 +280,7 @@ int main(int argc, char** argv) {
     flowmonHelper.SerializeToXmlFile ("myApp.flowmon.xml", true, true);
     
 
-#if 0 // Not necessary
+#if 1 // Not necessary
     // Print per flow statistics
     monitor->CheckForLostPackets ();
     Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmonHelper.GetClassifier ());

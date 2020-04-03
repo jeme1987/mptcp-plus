@@ -337,6 +337,8 @@ private:
   IpL4Protocol::DownTargetCallback m_downTarget;   //!< Callback to send packets over IPv4
   IpL4Protocol::DownTargetCallback6 m_downTarget6; //!< Callback to send packets over IPv6
 
+  uint8_t m_useMpTcpSocketBase;
+
   /**
    * \brief Copy constructor
    *

@@ -52,7 +52,7 @@ using namespace std;
 
 namespace ns3
 {
-static  int redundant = 1;
+static  int redundant = 0;
 
 NS_LOG_COMPONENT_DEFINE("MpTcpSocketBase");
 
@@ -147,7 +147,7 @@ MpTcpSocketBase::MpTcpSocketBase(const MpTcpSocketBase& sock)
     m_joinRequest(sock.m_joinRequest),
     m_subflowCreated(sock.m_subflowCreated),
     m_subflowTypeId(sock.m_subflowTypeId),
-   m_schedulerTypeId(sock.m_schedulerTypeId)
+    m_schedulerTypeId(sock.m_schedulerTypeId)
 {
   NS_LOG_FUNCTION(this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
@@ -194,8 +194,7 @@ MpTcpSocketBase::CreateScheduler(TypeId schedulerTypeId)
   NS_LOG_FUNCTION(this);
   NS_LOG_WARN("Overriding scheduler choice");
   ObjectFactory schedulerFactory;
-  //TODO BUGFIX
-  /*
+
   if (m_schedulerTypeId == MpTcpSchedulerFastestRTT::GetTypeId()) {
     schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
     printf("Creating scheduler - fastest RTT\n");
@@ -203,13 +202,13 @@ MpTcpSocketBase::CreateScheduler(TypeId schedulerTypeId)
   else if (m_schedulerTypeId == MpTcpSchedulerRoundRobin::GetTypeId()) {
     printf("Creating scheduler - round robin\n");
     schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
-  }*/
+  }
   
   //TODO temp fix select scheduler here
   //schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
   schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
-  
-  
+
+
   schedulerFactory.SetTypeId(schedulerTypeId);
   m_scheduler = schedulerFactory.Create<MpTcpScheduler>();
   m_scheduler->SetMeta(this);
@@ -556,7 +555,7 @@ void
 MpTcpSocketBase::ForwardUp (Ptr<Packet> packet, Ipv4Header header, uint16_t port, Ptr<Ipv4Interface> incomingInterface)
 {
   NS_LOG_DEBUG(this << " called with endpoint " << m_endPoint);
-  NS_FATAL_ERROR("This socket should never receive any packet");
+  TcpSocketBase::ForwardUp(packet, header, port, incomingInterface);
 }
 
 bool
@@ -780,7 +779,7 @@ int
 MpTcpSocketBase::Bind(const Address &address)
 {
   NS_LOG_FUNCTION (this<<address);
-  NS_FATAL_ERROR("TO remove");
+  // NS_FATAL_ERROR("TO remove");
   return TcpSocketBase::Bind(address);
 }
 
@@ -857,7 +856,7 @@ void
 MpTcpSocketBase::PersistTimeout()
 {
   NS_LOG_LOGIC ("PersistTimeout expired at " << Simulator::Now ().GetSeconds ());
-  NS_FATAL_ERROR("TODO");
+  return TcpSocketBase::PersistTimeout();
 }
 
 void
@@ -1458,7 +1457,8 @@ void
 MpTcpSocketBase::PeerClose(Ptr<Packet> p, const TcpHeader& tcpHeader)
 {
   NS_LOG_FUNCTION(this << " PEEER CLOSE CALLED !" << tcpHeader);
-  NS_FATAL_ERROR("TO REMOVE. Function overriden by PeerClose(subflow)");
+  // NS_FATAL_ERROR("TO REMOVE. Function overriden by PeerClose(subflow)");
+  return TcpSocketBase::PeerClose(p, tcpHeader);
 }
 
 /* Received a in-sequence FIN. Close down this socket. 
