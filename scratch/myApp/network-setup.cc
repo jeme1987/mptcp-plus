@@ -27,6 +27,26 @@ enum NETWORK_NODE {
 };
 
 
+/* Setting mobility model */
+/*
+  MobilityHelper mobility;
+ListPositionAllocator
+  mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                 "MinX", DoubleValue (0.0),
+                                 "MinY", DoubleValue (0.0),
+                                 "DeltaX", DoubleValue (5.0),
+                                 "DeltaY", DoubleValue (10.0),
+                                 "GridWidth", UintegerValue (3),
+                                 "LayoutType", StringValue ("RowFirst"));
+
+  mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
+                             "Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));
+  mobility.Install (sta);
+
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.Install (ap);
+*/
+
 AnimationInterface *pAnim = 0;
 
 NS_LOG_COMPONENT_DEFINE ("myApp");
@@ -74,7 +94,6 @@ std::pair<Ipv4Address, Ipv4Address> createWifiNetwork(
     std::string network, std::string mask,
     bool enablePcap = false, bool enableTrace = false)
 {
-    double distance = 1.0; //meter
     double frequency = 5.0; // GHz
     uint8_t nStreams = 1;
 
@@ -127,16 +146,6 @@ std::pair<Ipv4Address, Ipv4Address> createWifiNetwork(
     phy.EnableAsciiAll (ascii->CreateFileStream (filename + ".tr"));
     phy.EnablePcapAll (filename);
 
-    // mobility.
-    MobilityHelper mobility;
-    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-    positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-    positionAlloc->Add (Vector (distance, 0.0, 0.0));
-    mobility.SetPositionAllocator (positionAlloc);
-    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-    mobility.Install (ap);
-    mobility.Install (sta);
-
     Ipv4AddressHelper ip;
     ip.SetBase (Ipv4Address(network.c_str()), Ipv4Mask(mask.c_str()));
     Ipv4InterfaceContainer ipSta = ip.Assign (staDevice);
@@ -166,10 +175,30 @@ int main(int argc, char** argv) {
         allNodes.Get(NETWORK_NODE::MOBILE), allNodes.Get(NETWORK_NODE::WIFI_AP));
 
     // Set position of nodes
-    AnimationInterface::SetConstantPosition (allNodes.Get(NETWORK_NODE::MOBILE), 30, 30);
-    AnimationInterface::SetConstantPosition (allNodes.Get(NETWORK_NODE::WIFI_AP), 50, 10);
-    AnimationInterface::SetConstantPosition (allNodes.Get(NETWORK_NODE::LTE_BASESTATION), 50, 50);
-    AnimationInterface::SetConstantPosition (allNodes.Get(NETWORK_NODE::SERVER_NODE), 70, 30);
+    // mobility.
+    MobilityHelper mobility;
+    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
+    positionAlloc->Add (Vector (40.0, 50.0, 0.0));  // MOBILE
+    positionAlloc->Add (Vector (50.0, 60.0, 0.0)); // WIFI_AP
+    positionAlloc->Add (Vector (50.0, 40.0, 0.0));    // LTE_BASESTATION
+    positionAlloc->Add (Vector (70.0, 50.0, 0.0));  // SERVER_NODE
+    mobility.SetPositionAllocator (positionAlloc);
+
+    mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
+                             "Mode", StringValue ("Time"),
+                             "Time", StringValue ("1s"),
+                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=1.5]"),
+                             "Bounds", RectangleValue (Rectangle (30.0, 70.0, 30.0, 70.0)));
+    mobility.Install (allNodes.Get(NETWORK_NODE::MOBILE));
+
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    mobility.Install (allNodes.Get(NETWORK_NODE::WIFI_AP));
+
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    mobility.Install (allNodes.Get(NETWORK_NODE::LTE_BASESTATION));
+
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    mobility.Install (allNodes.Get(NETWORK_NODE::SERVER_NODE));
 
     // Create the animation object and configure for specified output
     pAnim = new AnimationInterface ("myApp.xml");
