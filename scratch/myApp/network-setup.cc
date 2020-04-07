@@ -165,6 +165,9 @@ int main(int argc, char** argv) {
         // Config::SetDefault ("ns3::MpTcpSocketBase::Scheduler", TypeIdValue(MpTcpSchedulerRoundRobin::GetTypeId()));
     }
 
+    // Set end time of the simulation
+    Simulator::Stop (Seconds (params.endTime + 5));
+
     // Here, we will create TOTAL_NODES for network topology
     NS_LOG_INFO ("Create nodes.");
     NodeContainer allNodes;
@@ -199,13 +202,6 @@ int main(int argc, char** argv) {
 
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
     mobility.Install (allNodes.Get(NETWORK_NODE::SERVER_NODE));
-
-    // Create the animation object and configure for specified output
-    pAnim = new AnimationInterface ("myApp.xml");
-    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::MOBILE), "Mobile Device");
-    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::WIFI_AP), "Wi-Fi AP");
-    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::LTE_BASESTATION), "LTE Base Station");
-    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::SERVER_NODE), "Server");
 
     // Install network stacks on the nodes
     InternetStackHelper internet;
@@ -255,7 +251,10 @@ int main(int argc, char** argv) {
     NS_LOG_INFO ("Enable global static routing.");
     Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
+    // Install sender and receiver applications
     NS_LOG_INFO ("Create traffic source & sink.");
+
+    // Install sender to MOBILE node
     Ptr<Node> appSource = allNodes.Get(MOBILE);
     Ptr<Sender> sender = CreateObject<Sender>();
     appSource->AddApplication (sender);
@@ -266,31 +265,16 @@ int main(int argc, char** argv) {
     sender->SetAttribute("PacketSize",  UintegerValue(params.packetSize));
     sender->SetAttribute("PacketNum",  UintegerValue(params.burstPktNum));
     std::stringstream ss;
-    
     ss << "ns3::ConstantRandomVariable[Constant=" << params.burstItvSec << "]"; 
-
     sender->SetAttribute("Interval", StringValue(ss.str()));
 
+    // Install receiver to SERVER_NODE
     Ptr<Node> appSink = allNodes.Get(SERVER_NODE);
     Ptr<Receiver> receiver = CreateObject<Receiver>();
     appSink->AddApplication (receiver);
     receiver->SetStartTime (Seconds (1));
     receiver->SetStopTime(Seconds (params.endTime));
     receiver->SetAttribute("UseTCP",  UintegerValue(params.UseTCP));
-
-    // [Shaomin] Maybe useful in future?
-    //localSocket->SetAttribute("SndBufSize", UintegerValue(4096));
-    //Ask for ASCII and pcap traces of network traffic
-    // AsciiTraceHelper ascii;
-    // p2p.EnableAsciiAll (ascii.CreateFileStream ("tcp-large-transfer.tr"));
-    // p2p.EnablePcapAll ("tcp-large-transfer");
-    Simulator::Stop (Seconds (params.endTime + 5));
-
-    // Provide the absolute path to the resource
-    // [Shaomin] Maybe useful in future
-    // uint32_t (global) resourceId1 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo1.png");
-    // uint32_t (global) resourceId2 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo2.png");
-    // pAnim->SetBackgroundImage ("/Users/john/ns3/netanim-3.105/ns-3-background.png", 0, 0, 0.2, 0.2, 0.1);
 
     // Install FlowMonitor on all nodes
     FlowMonitorHelper flowmonHelper;
@@ -300,6 +284,22 @@ int main(int argc, char** argv) {
     // Ipv4GlobalRoutingHelper g;
     // Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> ("myApp.routes", std::ios::out);
     // g.PrintRoutingTableAllAt (Seconds (0), routingStream);
+
+    // Create the animation object and configure for specified output
+    // Make sure the AnimationInterface is created as closer to Simulator::Run (); as possible
+    pAnim = new AnimationInterface ("myApp.xml");
+    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::MOBILE), "Mobile Device");
+    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::WIFI_AP), "Wi-Fi AP");
+    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::LTE_BASESTATION), "LTE Base Station");
+    pAnim->UpdateNodeDescription(allNodes.Get(NETWORK_NODE::SERVER_NODE), "Server");
+    pAnim->EnablePacketMetadata (true); // Optional
+    pAnim->EnableIpv4L3ProtocolCounters (Seconds (0), Seconds (params.endTime + 5)); // Optional
+
+    // Provide the absolute path to the resource
+    // [Shaomin] Maybe useful in future
+    // uint32_t (global) resourceId1 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo1.png");
+    // uint32_t (global) resourceId2 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo2.png");
+    // pAnim->SetBackgroundImage ("/Users/john/ns3/netanim-3.105/ns-3-background.png", 0, 0, 0.2, 0.2, 0.1);
 
     Simulator::Run ();
     std::cout << "Animation Trace file created:" << "myApp.xml" << std::endl;
