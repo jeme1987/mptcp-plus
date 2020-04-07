@@ -51,6 +51,7 @@ std::string parmsToJSONObj() {
     std::stringstream ss;
     jsonObjStart(ss);
     jsonObjAdd(ss, "UseTCP", params.UseTCP? "true":"false");
+    jsonObjAdd(ss, "UseMPTCP", params.UseMPTCP? "true":"false");
     jsonObjAdd(ss, "packetSize", params.packetSize);
     jsonObjAdd(ss, "burstItvSec", params.burstItvSec/1.0);
     jsonObjAdd(ss, "burstPktNum", params.burstPktNum);
