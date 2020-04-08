@@ -1226,6 +1226,7 @@ protected:
   friend class MpTcpSubflow;
   friend class MpTcpSchedulerRoundRobin;
   friend class MpTcpSchedulerFastestRTT;
+  friend class MpTcpSchedulerOTIAS;
 
   // Counters and events
   EventId           m_retxEvent     {}; //!< Retransmission event

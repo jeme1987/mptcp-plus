@@ -40,6 +40,7 @@
 #include "ns3/object-vector.h"
 #include "ns3/mptcp-scheduler-round-robin.h"
 #include "ns3/mptcp-scheduler-fastest-rtt.h"
+#include "ns3/mptcp-scheduler-otias.h"
 #include "ns3/mptcp-socket-base.h"
 #include "ns3/mptcp-subflow.h"
 #include "ns3/tcp-option-mptcp.h"
@@ -52,7 +53,8 @@ using namespace std;
 
 namespace ns3
 {
-static  int redundant = 0;
+  //hardcoded
+  static  int redundant = 0;
 
 NS_LOG_COMPONENT_DEFINE("MpTcpSocketBase");
 
@@ -204,10 +206,10 @@ MpTcpSocketBase::CreateScheduler(TypeId schedulerTypeId)
     schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
   }
   
-  //TODO temp fix select scheduler here
+  //TODO hardcoded temp fix select scheduler here
   //schedulerTypeId = MpTcpSchedulerFastestRTT::GetTypeId();
-  schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
-
+  //schedulerTypeId = MpTcpSchedulerRoundRobin::GetTypeId();
+  schedulerTypeId = MpTcpSchedulerOTIAS::GetTypeId();
 
   schedulerFactory.SetTypeId(schedulerTypeId);
   m_scheduler = schedulerFactory.Create<MpTcpScheduler>();
@@ -932,12 +934,8 @@ MpTcpSocketBase::SendPendingData(bool withAck)
   int subflowArrayId;
   uint16_t length;
 
-  /* redundant scheduler flag */
-  // TODO move to config options
-
   while(m_scheduler->GenerateMapping(subflowArrayId, dsnHead, length))
   {
-    printf("[+] Chosen Subflow =  %d\n",subflowArrayId);
     Ptr<MpTcpSubflow> subflow = GetSubflow(subflowArrayId);
     
     /* Sending of packet on subflow */
@@ -954,7 +952,6 @@ MpTcpSocketBase::SendPendingData(bool withAck)
     NS_LOG_DEBUG("Send result=" << ret);
 
     int numSubFlows = GetNActiveSubflows();
-      printf("[+] Total subflows = %d\n", numSubFlows);
     
     /* redundant protocol sends on all other flows */
     if (redundant) {
