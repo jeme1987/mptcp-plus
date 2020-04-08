@@ -119,7 +119,7 @@ void Sender::StartApplication ()
   Simulator::Cancel (m_sendEvent);
   // MPTCP SSN mapping is not comprehensive, avoid to send data before connection is done.
   // m_sendEvent = Simulator::ScheduleNow (&Sender::SendPacket, this);
-  m_sendEvent = Simulator::Schedule (Seconds (m_interval->GetValue ()), &Sender::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (Seconds (2.5), &Sender::SendPacket, this);
 }
 
 
