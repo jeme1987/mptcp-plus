@@ -29,6 +29,7 @@
 #include "ns3/tcp-socket-base.h"
 #include "ns3/inet-socket-address.h"
 #include "ns3/mptcp-scheduler-round-robin.h"
+#include "ns3/mptcp-scheduler-otias.h"
 #include "ns3/mptcp-fullmesh.h"
 #include "ns3/mptcp-ndiffports.h"
 

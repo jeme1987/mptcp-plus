@@ -1,32 +1,9 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2015 University of Sussex
- * Copyright (c) 2015 Université Pierre et Marie Curie (UPMC)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Author:  Kashif Nadeem <kshfnadeem@gmail.com>
- *          Matthieu Coudron <matthieu.coudron@lip6.fr>
- *          Morteza Kheirkhah <m.kheirkhah@sussex.ac.uk>
- */
-
-#include "ns3/mptcp-scheduler-round-robin.h"
+#include "ns3/mptcp-scheduler-otias.h"
 #include "ns3/mptcp-subflow.h"
 #include "ns3/mptcp-socket-base.h"
 #include "ns3/log.h"
 
-NS_LOG_COMPONENT_DEFINE("MpTcpSchedulerRoundRobin");
+NS_LOG_COMPONENT_DEFINE("MpTcpSchedulerOTIAS");
 
 namespace ns3
 {
@@ -38,30 +15,29 @@ SequenceNumber64 SEQ32TO64(SequenceNumber32 seq)
 }
 
 TypeId
-MpTcpSchedulerRoundRobin::GetTypeId (void)
+MpTcpSchedulerOTIAS::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::MpTcpSchedulerRoundRobin")
+  static TypeId tid = TypeId ("ns3::MpTcpSchedulerOTIAS")
     .SetParent<MpTcpScheduler> ()
-    .AddConstructor<MpTcpSchedulerRoundRobin> ()
+    .AddConstructor<MpTcpSchedulerOTIAS> ()
   ;
   return tid;
 }
 
-MpTcpSchedulerRoundRobin::MpTcpSchedulerRoundRobin() :
+MpTcpSchedulerOTIAS::MpTcpSchedulerOTIAS() :
   MpTcpScheduler(),
-  m_lastUsedFlowId(0),
   m_metaSock(0)
 {
   NS_LOG_FUNCTION(this);
 }
 
-MpTcpSchedulerRoundRobin::~MpTcpSchedulerRoundRobin (void)
+MpTcpSchedulerOTIAS::~MpTcpSchedulerOTIAS (void)
 {
   NS_LOG_FUNCTION(this);
 }
 
 void
-MpTcpSchedulerRoundRobin::SetMeta(Ptr<MpTcpSocketBase> metaSock)
+MpTcpSchedulerOTIAS::SetMeta(Ptr<MpTcpSocketBase> metaSock)
 {
   NS_ASSERT(metaSock);
   NS_ASSERT_MSG(m_metaSock == 0, "SetMeta already called");
@@ -69,7 +45,7 @@ MpTcpSchedulerRoundRobin::SetMeta(Ptr<MpTcpSocketBase> metaSock)
 }
 
 Ptr<MpTcpSubflow>
-MpTcpSchedulerRoundRobin::GetSubflowToUseForEmptyPacket()
+MpTcpSchedulerOTIAS::GetSubflowToUseForEmptyPacket()
 {
   NS_ASSERT(m_metaSock->GetNActiveSubflows() > 0 );
   return  m_metaSock->GetSubflow(0);
@@ -77,11 +53,10 @@ MpTcpSchedulerRoundRobin::GetSubflowToUseForEmptyPacket()
 
 /* We assume scheduler can't send data on subflows, so it can just generate mappings */
 bool
-MpTcpSchedulerRoundRobin::GenerateMapping(int& activeSubflowArrayId, SequenceNumber64& dsn, uint16_t& length)
+MpTcpSchedulerOTIAS::GenerateMapping(int& activeSubflowArrayId, SequenceNumber64& dsn, uint16_t& length)
 {
   NS_LOG_FUNCTION(this);
   NS_ASSERT(m_metaSock);
-
   int nbOfSubflows = m_metaSock->GetNActiveSubflows();
   int attempt = 0;
   uint32_t amountOfDataToSend = 0;
@@ -102,12 +77,38 @@ MpTcpSchedulerRoundRobin::GenerateMapping(int& activeSubflowArrayId, SequenceNum
      NS_LOG_DEBUG("No meta window available (TODO should be in persist state ?)");
      return false;
    }
+
+
+  //algo for OTIAS
+  //naming of variables follows original paper
+   double min_T = 0xFFFFFFFF;
+   int selected_subflow = 0;
+
+   for(int i = 0; i<(int)(m_metaSock->GetNActiveSubflows()); i++)
+   {
+      Ptr<MpTcpSubflow> subflow = m_metaSock->GetSubflow(i);
+       //printf("[+] Subflow %d\n", i);
+      
+      double not_yet_send = amountOfDataToSend;
+      double num_can_send = subflow->m_tcb->m_cWnd - subflow->UnAckDataCount();
+      double num_RTT_wait = (not_yet_send - num_can_send) / subflow->m_tcb->m_cWnd;
+      double T = (num_RTT_wait + 0.5)  * subflow->m_rtt->GetEstimate().GetMilliSeconds();
+
+      if(T < min_T)
+      {
+        min_T = T;
+        selected_subflow = i;
+      }
+   }
+
+
+  printf("[+] Subflow %d\n", selected_subflow);
+
   while(attempt < nbOfSubflows)
      {
        attempt++;
-
-       m_lastUsedFlowId = (m_lastUsedFlowId + 1) % nbOfSubflows;
-       Ptr<MpTcpSubflow> subflow = m_metaSock->GetSubflow(m_lastUsedFlowId);
+       int id = selected_subflow;
+       Ptr<MpTcpSubflow> subflow = m_metaSock->GetSubflow(id);
        uint32_t subflowWindow = subflow->AvailableWindow();
        uint32_t canSend = std::min( subflowWindow, metaWindow);
 
@@ -115,7 +116,7 @@ MpTcpSchedulerRoundRobin::GenerateMapping(int& activeSubflowArrayId, SequenceNum
        //metaWindow en fait on s'en fout du SegSize ?
        if(canSend > 0)
         {
-          activeSubflowArrayId = m_lastUsedFlowId;
+          activeSubflowArrayId = id;
           dsn = SEQ32TO64(metaNextTxSeq);
           canSend = std::min(canSend, amountOfDataToSend);
           // For now we limit ourselves to a per packet basis
