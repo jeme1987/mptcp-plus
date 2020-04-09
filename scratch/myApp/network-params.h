@@ -27,10 +27,10 @@ public:
         delayWifiServer = 2;
         errateLteServer = 1;
         errateWifiServer = 1;
-        packetSize = 1464;
-        burstPktNum = 1;
-        burstItvSec = 0.5;
-        endTime = 6.0;
+        packetSize = 500;   // Don't change, MPTCP work abnormally with larger packet size.  (packet segmentation) 
+        burstPktNum = 1;    // Don't change, MPTCP work abnormally when buffer size is full. (packet segmentation)
+        burstItvSec = 0.1;  // Set different interval to control the traffic
+        endTime = 10.0;     // The MPTCP original FastRtt scheduler suffers SIGSEGV with long execution time ...
     }
 };
 

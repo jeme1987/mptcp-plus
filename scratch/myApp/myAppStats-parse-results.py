@@ -17,17 +17,28 @@ def main(argv):
 
         print('------ app-statistics -----\n')
         stats = d['stats']
+        pktLostRate = 1 - (stats['RxPktCnt']/stats['TxPktCnt'])
         print('TxPkts: {}, TxBytes: {}'.format(stats['TxPktCnt'], stats['TxPktCnt']*stats['PktSize']))
         print('RxPkts: {}, RxBytes: {}'.format(stats['RxPktCnt'], stats['RxPktCnt']*stats['PktSize']))
-        print('PktLossRate: {}%'.format(1 - (stats['RxPktCnt']/stats['TxPktCnt'])))
+        print('PktLossRate: {}%'.format(pktLostRate))
         print('')
 
         print('latency:')
         df = pandas.DataFrame.from_dict(stats['Latency']).dropna()
         series = df['RxTime'] - df['TxTime']
         print(series.describe())
-        series.plot(title='')
-        plt.ylabel('sec')
+
+        fig, ax = plt.subplots()
+        ax2 = ax.twinx()
+        n, bins, patches = ax.hist(series, bins=100)
+        n, bins, patches = ax2.hist(
+            series, cumulative=1, histtype='step', bins=1000, density=1, color='tab:orange')
+
+        ax.set_xlabel('Transmission Latency')
+        ax2.set_ylabel('# of Packets')
+        ax2.set_ylabel('CDF')
+        ax2.text(0.2, 0.8, 'mean: {:.2f} sec\nPktLost: {:.2f}%'.format(series.mean(), pktLostRate))
+        plt.title('Youtube 4K @ UDP')
         plt.show()
 
 

@@ -280,6 +280,7 @@ Receiver::Receive (Ptr<Socket> socket)
             gStats.pktTxRxTimeMs[payload->app_sn].second = now;
           else {
             NS_LOG_ERROR ("Suspicious SN " + std::to_string(payload->app_sn));
+            break;
           }
 
           m_segBytes = payload->size;
