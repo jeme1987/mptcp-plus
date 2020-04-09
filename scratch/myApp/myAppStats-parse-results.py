@@ -37,7 +37,12 @@ def main(argv):
         ax.set_xlabel('Transmission Latency')
         ax2.set_ylabel('# of Packets')
         ax2.set_ylabel('CDF')
-        ax2.text(0.2, 0.8, 'mean: {:.2f} sec\nPktLost: {:.2f}%'.format(series.mean(), pktLostRate))
+
+        x0, xmax = ax2.get_xlim()
+        y0, ymax = ax2.get_xlim()
+        data_width = xmax - x0
+        data_height = ymax - y0
+        ax2.text(x0 + data_width * 0.1, 0.8, 'mean: {:.2f} ms\n90%: {:.2f} ms\nPktLost: {:.2f}%'.format(series.mean()*1000, series.quantile(0.9)*1000, pktLostRate))
         plt.title('Youtube 4K @ UDP')
         plt.show()
 
