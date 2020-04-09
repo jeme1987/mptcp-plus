@@ -15,6 +15,7 @@
 #include "monitorApplication.h"
 #include "myJson.h"
 #include <utility>
+#include <unistd.h>
 
 using namespace ns3;
 
@@ -25,27 +26,6 @@ enum NETWORK_NODE {
     SERVER_NODE = 3,
     TOAL_NODES = 4
 };
-
-
-/* Setting mobility model */
-/*
-  MobilityHelper mobility;
-ListPositionAllocator
-  mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
-                                 "MinX", DoubleValue (0.0),
-                                 "MinY", DoubleValue (0.0),
-                                 "DeltaX", DoubleValue (5.0),
-                                 "DeltaY", DoubleValue (10.0),
-                                 "GridWidth", UintegerValue (3),
-                                 "LayoutType", StringValue ("RowFirst"));
-
-  mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
-                             "Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));
-  mobility.Install (sta);
-
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (ap);
-*/
 
 AnimationInterface *pAnim = 0;
 
@@ -296,10 +276,14 @@ int main(int argc, char** argv) {
     pAnim->EnableIpv4L3ProtocolCounters (Seconds (0), Seconds (params.endTime + 5)); // Optional
 
     // Provide the absolute path to the resource
-    // [Shaomin] Maybe useful in future
-    // uint32_t (global) resourceId1 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo1.png");
-    // uint32_t (global) resourceId2 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo2.png");
-    // pAnim->SetBackgroundImage ("/Users/john/ns3/netanim-3.105/ns-3-background.png", 0, 0, 0.2, 0.2, 0.1);
+    std::string pic_path = string(getcwd(NULL, 0)) + "/scratch/myApp/pic/"; // Ignore potential memory leak...
+
+    // No function?
+    // uint32_t mobilePic = pAnim->AddResource (pic_path + "wifi.jpg");
+    // pAnim->UpdateNodeImage(allNodes.Get(NETWORK_NODE::MOBILE)->GetId(), mobilePic);
+
+    // Use backgroud for only the mobile pic
+    pAnim->SetBackgroundImage (pic_path + "mobile.jpg", 0, 0, 0.01, 0.01, 0.5);
 
     Simulator::Run ();
     std::cout << "Animation Trace file created:" << "myApp.xml" << std::endl;
