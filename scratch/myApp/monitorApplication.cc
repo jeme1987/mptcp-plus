@@ -24,6 +24,17 @@ public:
 };
 STAT gStats;
 
+Ptr<NormalRandomVariable> uv = nullptr;
+double getRandomProcessingDelay() {
+  if (uv == nullptr) {
+    uv  = CreateObject<NormalRandomVariable> ();
+    uv->SetAttribute("Mean", DoubleValue(0.001));
+    uv->SetAttribute("Variance", DoubleValue(0.0001));
+    uv->SetAttribute("Bound", DoubleValue(0.01));
+  }
+  double delay = uv->GetValue ();
+  return delay > 0? delay : 0;
+}
 
 //----------------------------------------------------------------------
 //-- Sender
@@ -115,8 +126,8 @@ void Sender::StartApplication ()
 
   // Update to the statistical monitor
   gStats.pktSize = m_pktSize;
-
   Simulator::Cancel (m_sendEvent);
+
   // MPTCP SSN mapping is not comprehensive, avoid to send data before connection is done.
   // m_sendEvent = Simulator::ScheduleNow (&Sender::SendPacket, this);
   m_sendEvent = Simulator::Schedule (Seconds (2.5), &Sender::SendPacket, this);
@@ -136,7 +147,9 @@ void Sender::SendPacket ()
 
   for (uint32_t i = 0; i < m_pktNum; i += 1) {
     payload_temp.app_sn += 1;
-    payload_temp.timestamp_ms = Simulator::Now ().GetMilliSeconds();
+
+    // Simulate processing delay
+    payload_temp.timestamp_ms = Simulator::Now ().GetMilliSeconds() - int(getRandomProcessingDelay()*1000);
 
     // Update to the statistical monitor 
     gStats.sentPkts += 1;
@@ -250,7 +263,9 @@ Receiver::Receive (Ptr<Socket> socket)
 {
   Ptr<Packet> packet;
   Address from;
-  uint64_t now = Simulator::Now ().GetMilliSeconds();
+
+  // Simulate processing delay
+  uint64_t now = Simulator::Now ().GetMilliSeconds() +  int(getRandomProcessingDelay()*1000);
 
   while ((packet = socket->RecvFrom (from))) {
       if (InetSocketAddress::IsMatchingType (from)) {
