@@ -17,7 +17,7 @@ def main(argv):
 
         print('------ app-statistics -----\n')
         stats = d['stats']
-        pktLostRate = 1 - (stats['RxPktCnt']/stats['TxPktCnt'])
+        pktLostRate = (1 - (stats['RxPktCnt']/stats['TxPktCnt']))*100
         print('TxPkts: {}, TxBytes: {}'.format(stats['TxPktCnt'], stats['TxPktCnt']*stats['PktSize']))
         print('RxPkts: {}, RxBytes: {}'.format(stats['RxPktCnt'], stats['RxPktCnt']*stats['PktSize']))
         print('PktLossRate: {}%'.format(pktLostRate))

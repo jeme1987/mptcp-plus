@@ -25,8 +25,8 @@ public:
         UseMPTCP = 0;
         delayLteServer = 20;
         delayWifiServer = 20;
-        errateLteServer = 1;
-        errateWifiServer = 1;
+        errateLteServer = 0;
+        errateWifiServer = 0;
         packetSize = 500;   // Don't change, MPTCP work abnormally with larger packet size.  (packet segmentation) 
         burstPktNum = 1;    // Don't change, MPTCP work abnormally when buffer size is full. (packet segmentation)
         burstItvSec = 0.1;  // Set different interval to control the traffic
