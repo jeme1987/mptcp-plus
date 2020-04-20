@@ -81,6 +81,7 @@ Sender::Sender()
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_interval = CreateObject<ConstantRandomVariable> ();
+  m_PktIntrval = 0.001; // DONT MODIFY ME
   m_socket = 0;
   m_buf = 0;
 }
@@ -123,14 +124,14 @@ void Sender::StartApplication ()
   }
   payload_temp.app_sn = 0;
   payload_temp.size = m_pktSize;
-
+  m_sentPktNumInBurst = 0;
   // Update to the statistical monitor
   gStats.pktSize = m_pktSize;
   Simulator::Cancel (m_sendEvent);
 
   // MPTCP SSN mapping is not comprehensive, avoid to send data before connection is done.
   // m_sendEvent = Simulator::ScheduleNow (&Sender::SendPacket, this);
-  m_sendEvent = Simulator::Schedule (Seconds (2.5), &Sender::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (Seconds (5), &Sender::SendPacket, this);
 }
 
 
@@ -143,9 +144,8 @@ void Sender::StopApplication ()
 
 void Sender::SendPacket ()
 { 
-  NS_LOG_INFO ("Sending packet at " << Simulator::Now () << " to " << m_destAddr);
-
-  for (uint32_t i = 0; i < m_pktNum; i += 1) {
+  if (m_sentPktNumInBurst++ < m_pktNum) {
+    NS_LOG_INFO ("Sending packet at " << Simulator::Now () << " to " << m_destAddr);
     payload_temp.app_sn += 1;
 
     // Simulate processing delay
@@ -168,9 +168,18 @@ void Sender::SendPacket ()
         m_socket->SendTo (packet, 0, InetSocketAddress (m_destAddr, m_destPort));
     
     m_txTrace (packet);
-  }
-  m_sendEvent = Simulator::Schedule (Seconds (m_interval->GetValue ()),
+
+    if (m_sentPktNumInBurst == m_pktNum) {
+      m_sentPktNumInBurst = 0;
+      m_sendEvent = Simulator::Schedule (Seconds (m_interval->GetValue()),
                                      &Sender::SendPacket, this);
+    } else {
+      m_sendEvent = Simulator::Schedule (Seconds (m_PktIntrval),
+                                     &Sender::SendPacket, this);
+    }
+  } else {
+    NS_FATAL_ERROR("Fatal!");
+  }
 }
 
 

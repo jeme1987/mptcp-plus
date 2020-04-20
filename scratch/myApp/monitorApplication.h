@@ -36,9 +36,12 @@ private:
 
   uint32_t        m_pktSize;
   uint32_t        m_pktNum;
+  uint32_t        m_sentPktNumInBurst;
   Ipv4Address     m_destAddr;
   uint32_t        m_destPort;
+
   Ptr<ConstantRandomVariable> m_interval;
+  double m_PktIntrval;
 
   Ptr<Socket>     m_socket;
   EventId         m_sendEvent;
