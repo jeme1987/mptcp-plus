@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
 
     NS_LOG_INFO ("Create point-2-point network between mobile and LTE.");
     PointToPointHelper p2p;
-    p2p.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
+    p2p.SetDeviceAttribute ("DataRate", StringValue ("16Mbps"));
     p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
     NetDeviceContainer devMobileLte = p2p.Install (mobileLte);
 
