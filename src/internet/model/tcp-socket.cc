@@ -61,7 +61,7 @@ TcpSocket::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("SegmentSize",
                    "TCP maximum segment size in bytes (may be adjusted based on MTU discovery)",
-                   UintegerValue (536),
+                   UintegerValue (4096),
                    MakeUintegerAccessor (&TcpSocket::GetSegSize,
                                          &TcpSocket::SetSegSize),
                    MakeUintegerChecker<uint32_t> ())
@@ -73,7 +73,7 @@ TcpSocket::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("InitialCwnd",
                    "TCP initial congestion window size (segments)",
-                   UintegerValue (1),
+                   UintegerValue (1000),
                    MakeUintegerAccessor (&TcpSocket::GetInitialCwnd,
                                          &TcpSocket::SetInitialCwnd),
                    MakeUintegerChecker<uint32_t> ())
